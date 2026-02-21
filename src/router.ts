@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Message router
+// OpenBrowserClaw — Message router
 // ---------------------------------------------------------------------------
 
 import type { Channel } from './types.js';

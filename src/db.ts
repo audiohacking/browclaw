@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — IndexedDB database layer
+// OpenBrowserClaw — IndexedDB database layer
 // ---------------------------------------------------------------------------
 
 import { DB_NAME, DB_VERSION } from './config.js';

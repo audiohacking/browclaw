@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Telegram Bot API Channel
+// OpenBrowserClaw — Telegram Bot API Channel
 // ---------------------------------------------------------------------------
 
 import type { Channel, InboundMessage } from '../types.js';
@@ -148,7 +148,7 @@ export class TelegramChannel implements Channel {
     if (msg.text === '/chatid') {
       this.apiCall('sendMessage', {
         chat_id: chatId,
-        text: `Chat ID: \`${chatId}\`\nRegister this ID in BrowserClaw settings.`,
+        text: `Chat ID: \`${chatId}\`\nRegister this ID in OpenBrowserClaw settings.`,
         parse_mode: 'Markdown',
       }).catch(console.error);
       return;
@@ -158,7 +158,7 @@ export class TelegramChannel implements Channel {
     if (msg.text === '/ping') {
       this.apiCall('sendMessage', {
         chat_id: chatId,
-        text: 'Pong! 🏓 BrowserClaw is running.',
+        text: 'Pong! 🏓 OpenBrowserClaw is running.',
       }).catch(console.error);
       return;
     }

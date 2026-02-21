@@ -7,8 +7,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'BrowserClaw',
-        short_name: 'BrowserClaw',
+        name: 'OpenBrowserClaw',
+        short_name: 'OpenBrowserClaw',
         description: 'Browser-native personal AI assistant',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',

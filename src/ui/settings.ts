@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Settings UI Component
+// OpenBrowserClaw — Settings UI Component
 // ---------------------------------------------------------------------------
 
 import { Orchestrator } from '../orchestrator.js';

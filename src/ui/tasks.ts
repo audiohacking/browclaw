@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Tasks UI Component
+// OpenBrowserClaw — Tasks UI Component
 // ---------------------------------------------------------------------------
 
 import { Orchestrator } from '../orchestrator.js';

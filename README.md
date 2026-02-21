@@ -1,4 +1,4 @@
-# BrowserClaw
+# OpenBrowserClaw
 
 Browser-native personal AI assistant. Zero infrastructure — the browser is the server.
 
@@ -7,7 +7,7 @@ Built as a browser-only reimagination of [NanoClaw](../README.md). Same philosop
 ## Quick Start
 
 ```bash
-cd browserclaw
+cd openbrowserclaw
 npm install
 npm run dev
 ```
@@ -86,7 +86,7 @@ Open `http://localhost:5173`, paste your [Anthropic API key](https://console.ant
 Optional. Works entirely via HTTPS — no WebSockets or special protocols.
 
 1. Create a bot with `@BotFather` on Telegram
-2. Open Settings in BrowserClaw, paste the bot token
+2. Open Settings in OpenBrowserClaw, paste the bot token
 3. Send `/chatid` to your bot to get the chat ID
 4. Add the chat ID in Settings
 5. Messages from Telegram are processed the same as browser chat
@@ -108,7 +108,7 @@ Without these assets, the `bash` tool returns a helpful error. All other tools w
 
 ## Comparison with NanoClaw
 
-| | NanoClaw | BrowserClaw |
+| | NanoClaw | OpenBrowserClaw |
 |---|---|---|
 | Runtime | Node.js process | Browser tab |
 | Agent sandbox | Docker/Apple Container | Web Worker + WebVM |

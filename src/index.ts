@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Entry point
+// OpenBrowserClaw — Entry point
 // ---------------------------------------------------------------------------
 
 import { AppUI } from './ui/app.js';
@@ -16,7 +16,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error('BrowserClaw failed to start:', err);
+  console.error('OpenBrowserClaw failed to start:', err);
   document.body.innerHTML = `
     <div style="
       display: flex;
@@ -30,7 +30,7 @@ main().catch((err) => {
       text-align: center;
     ">
       <div>
-        <h1>BrowserClaw failed to start</h1>
+        <h1>OpenBrowserClaw failed to start</h1>
         <p style="color: #8892b0; margin-top: 12px;">${err instanceof Error ? err.message : String(err)}</p>
         <p style="color: #5a6080; margin-top: 8px; font-size: 12px;">Check the browser console for details.</p>
       </div>

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Chat UI Component
+// OpenBrowserClaw — Chat UI Component
 // ---------------------------------------------------------------------------
 
 import { Orchestrator } from '../orchestrator.js';

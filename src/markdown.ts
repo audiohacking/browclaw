@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Lightweight Markdown → HTML renderer
+// OpenBrowserClaw — Lightweight Markdown → HTML renderer
 // ---------------------------------------------------------------------------
 //
 // Zero dependencies.  Handles the subset of Markdown that Claude outputs:

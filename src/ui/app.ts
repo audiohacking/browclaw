@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Main UI Application
+// OpenBrowserClaw — Main UI Application
 // ---------------------------------------------------------------------------
 
 import { Orchestrator } from '../orchestrator.js';
@@ -109,7 +109,7 @@ export class AppUI {
     // Header
     const header = el('header', 'app-header');
     const logo = el('div', 'app-logo');
-    logo.innerHTML = '<span class="app-logo-icon">🦀</span> BrowserClaw';
+    logo.innerHTML = '<span class="app-logo-icon">🦀</span> OpenBrowserClaw';
     header.appendChild(logo);
 
     const nav = el('nav', 'app-nav');

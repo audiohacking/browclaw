@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Web Crypto helpers for API key encryption
+// OpenBrowserClaw — Web Crypto helpers for API key encryption
 // ---------------------------------------------------------------------------
 
 import { PBKDF2_ITERATIONS } from './config.js';

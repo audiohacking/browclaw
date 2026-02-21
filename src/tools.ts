@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Tool definitions for the Claude API
+// OpenBrowserClaw — Tool definitions for the Claude API
 // ---------------------------------------------------------------------------
 
 import type { ToolDefinition } from './types.js';

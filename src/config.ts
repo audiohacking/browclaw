@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Configuration constants
+// OpenBrowserClaw — Configuration constants
 // ---------------------------------------------------------------------------
 
 /** Default assistant name (used in trigger pattern) */
@@ -50,13 +50,13 @@ export const FETCH_MAX_RESPONSE = 100_000;
 export const PBKDF2_ITERATIONS = 600_000;
 
 /** IndexedDB database name */
-export const DB_NAME = 'browserclaw';
+export const DB_NAME = 'openbrowserclaw';
 
 /** IndexedDB version */
 export const DB_VERSION = 1;
 
 /** OPFS root directory name */
-export const OPFS_ROOT = 'browserclaw';
+export const OPFS_ROOT = 'openbrowserclaw';
 
 /** Default group for browser chat */
 export const DEFAULT_GROUP_ID = 'br:main';

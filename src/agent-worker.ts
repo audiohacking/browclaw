@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// BrowserClaw — Agent Worker
+// OpenBrowserClaw — Agent Worker
 // ---------------------------------------------------------------------------
 //
 // Runs in a dedicated Web Worker. Owns the Claude API tool-use loop.
