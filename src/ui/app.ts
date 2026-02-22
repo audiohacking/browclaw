@@ -34,9 +34,7 @@ export class AppUI {
    * Initialize the app and render.
    */
   async init(): Promise<void> {
-    this.render();
-
-    // Wire up orchestrator events
+    // Wire up orchestrator events before init
     this.orchestrator.events.on('message', (msg: StoredMessage) => {
       this.chatUI.addMessage(msg);
     });
@@ -74,12 +72,15 @@ export class AppUI {
       this.chatUI.updateTokenUsage(usage);
     });
 
-    // Initialize orchestrator
+    // Initialize orchestrator (opens database) BEFORE rendering UI
     try {
       await this.orchestrator.init();
     } catch (err) {
       console.error('Failed to initialize:', err);
     }
+
+    // Now render — safe to access DB from mount() calls
+    this.render();
 
     // Show settings if not configured
     if (!this.orchestrator.isConfigured()) {
