@@ -8,6 +8,7 @@ import { DEFAULT_GROUP_ID, CONTEXT_WINDOW_SIZE } from '../config.js';
 import type { StoredMessage, OrchestratorState, ThinkingLogEntry, TokenUsage } from '../types.js';
 import { renderMarkdown } from '../markdown.js';
 import { el } from './app.js';
+import { openFileViewer } from './file-viewer-modal.js';
 
 /**
  * Chat UI component. Renders the message list, input area,
@@ -347,6 +348,8 @@ export class ChatUI {
       // Assistant messages: render as markdown
       contentEl.classList.add('md');
       contentEl.innerHTML = renderMarkdown(msg.content);
+      // Linkify file references so they open in the viewer modal
+      this.linkifyFileRefs(contentEl, msg.groupId);
     } else {
       // User messages: plain text
       contentEl.textContent = msg.content;
@@ -358,6 +361,103 @@ export class ChatUI {
     wrapper.appendChild(timeEl);
 
     this.messagesEl.appendChild(wrapper);
+  }
+
+  /**
+   * Walk the rendered message DOM and turn file-path references into clickable
+   * links that open the file viewer modal.
+   *
+   * Targets:
+   *   - Inline <code> elements whose text looks like a workspace file path
+   *   - Plain text patterns like "Written 1234 bytes to some/file.ext"
+   */
+  private linkifyFileRefs(root: HTMLElement, groupId: string): void {
+    // Pattern for file paths with common extensions
+    const FILE_EXT = /\.(html?|css|js|mjs|ts|tsx|jsx|json|md|txt|svg|xml|csv|ya?ml|py|sh|bash|toml|cfg|ini|log|env|sql)$/i;
+
+    // 1. Inline <code> elements containing a bare file path
+    const codeEls = root.querySelectorAll('code');
+    codeEls.forEach((codeEl) => {
+      // Skip code blocks inside <pre>
+      if (codeEl.parentElement?.tagName === 'PRE') return;
+
+      const text = codeEl.textContent?.trim() ?? '';
+      if (FILE_EXT.test(text) && !text.includes(' ')) {
+        const link = this.makeFileLink(text, groupId);
+        // Preserve code styling inside the link
+        const innerCode = document.createElement('code');
+        innerCode.textContent = text;
+        link.appendChild(innerCode);
+        link.classList.add('file-ref-code');
+        codeEl.replaceWith(link);
+      }
+    });
+
+    // 2. Text nodes that mention file paths (e.g., "Written 1234 bytes to foo/bar.html")
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes: Text[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      textNodes.push(node as Text);
+    }
+
+    // Pattern: optional path segments + filename.ext (must contain a known extension)
+    const PATH_RE = /(?:^|[\s"'`(])(([\w./-]+\/)?[\w.-]+\.(html?|css|js|mjs|ts|tsx|jsx|json|md|txt|svg|xml|csv|ya?ml|py|sh|bash|toml|cfg|ini|log|env|sql))(?=[\s"'`).,;:!?]|$)/gi;
+
+    for (const textNode of textNodes) {
+      // Don't touch text inside <code>, <pre>, or <a>
+      const parent = textNode.parentElement;
+      if (!parent) continue;
+      if (['CODE', 'PRE', 'A'].includes(parent.tagName)) continue;
+
+      const text = textNode.textContent ?? '';
+      PATH_RE.lastIndex = 0;
+      const matches = [...text.matchAll(PATH_RE)];
+      if (matches.length === 0) continue;
+
+      const frag = document.createDocumentFragment();
+      let lastIndex = 0;
+
+      for (const match of matches) {
+        const filePath = match[1];
+        const startIdx = match.index! + (match[0].length - match[0].trimStart().length);
+        // Exact start of the captured group within the full match
+        const captureStart = text.indexOf(filePath, match.index!);
+
+        // Text before this match
+        if (captureStart > lastIndex) {
+          frag.appendChild(document.createTextNode(text.slice(lastIndex, captureStart)));
+        }
+
+        const link = this.makeFileLink(filePath, groupId);
+        link.textContent = filePath;
+        frag.appendChild(link);
+
+        lastIndex = captureStart + filePath.length;
+      }
+
+      // Remaining text
+      if (lastIndex < text.length) {
+        frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+      }
+
+      parent.replaceChild(frag, textNode);
+    }
+  }
+
+  /**
+   * Create a clickable anchor element for a file path.
+   */
+  private makeFileLink(filePath: string, groupId: string): HTMLAnchorElement {
+    const a = document.createElement('a');
+    a.href = '#';
+    a.className = 'file-ref-link';
+    a.title = `Open ${filePath}`;
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      openFileViewer(groupId, filePath);
+    });
+    return a;
   }
 
   private renderLogEntry(entry: ThinkingLogEntry): void {

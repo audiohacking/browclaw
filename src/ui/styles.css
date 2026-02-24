@@ -999,6 +999,228 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
+ * File reference links in chat messages
+ * --------------------------------------------------------------------------- */
+
+.file-ref-link {
+  color: var(--accent) !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--accent);
+  transition: opacity 0.15s;
+}
+
+.file-ref-link:hover {
+  opacity: 0.8;
+  border-bottom-style: solid;
+}
+
+.file-ref-code {
+  border-bottom: 1px dashed var(--accent);
+}
+
+.file-ref-code code {
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+ * File Viewer Modal (overlay)
+ * --------------------------------------------------------------------------- */
+
+.fvm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.fvm-overlay.fvm-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fvm-modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 780px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  animation: fvm-slide-in 0.2s ease;
+}
+
+@keyframes fvm-slide-in {
+  from { transform: translateY(12px); opacity: 0.5; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.fvm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.fvm-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fvm-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.fvm-path {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fvm-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fvm-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+  white-space: nowrap;
+}
+
+.fvm-btn:hover {
+  background: var(--border);
+}
+
+.fvm-btn-close {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 4px 10px;
+  line-height: 1;
+}
+
+.fvm-btn-close:hover {
+  color: var(--error-text);
+  border-color: var(--error-text);
+}
+
+.fvm-body {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.fvm-iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  border: none;
+  background: #fff;
+}
+
+.fvm-code {
+  margin: 0;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  white-space: pre;
+  tab-size: 2;
+  overflow-x: auto;
+}
+
+.fvm-code code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  padding: 0;
+}
+
+.fvm-loading,
+.fvm-error {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.fvm-error {
+  color: var(--error-text);
+}
+
+/* ---------------------------------------------------------------------------
+ * File Viewer Modal — mobile (full viewport)
+ * --------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  .fvm-overlay {
+    padding: 0;
+  }
+
+  .fvm-modal {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    width: 100%;
+    border-radius: 0;
+    border: none;
+  }
+
+  .fvm-header {
+    padding: 12px 14px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+
+  .fvm-btn-close {
+    font-size: 20px;
+    padding: 6px 14px;
+    min-height: 36px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fvm-iframe {
+    min-height: 60vh;
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * Files browser
  * --------------------------------------------------------------------------- */
 
