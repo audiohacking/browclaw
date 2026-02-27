@@ -5,19 +5,25 @@
 import type { Channel } from './types.js';
 import { BrowserChatChannel } from './channels/browser-chat.js';
 import { TelegramChannel } from './channels/telegram.js';
+import { BlueskyChannel } from './channels/bluesky.js';
+import { MatrixChannel } from './channels/matrix.js';
 
 /**
  * Routes outbound messages and typing indicators to the correct channel
  * based on the groupId prefix.
  *
  * Prefix mapping:
- *   "br:"  → BrowserChatChannel
- *   "tg:"  → TelegramChannel
+ *   "br:"   → BrowserChatChannel
+ *   "tg:"   → TelegramChannel
+ *   "bsky:" → BlueskyChannel
+ *   "mx:"   → MatrixChannel
  */
 export class Router {
   constructor(
     private browserChat: BrowserChatChannel,
     private telegram: TelegramChannel | null,
+    private bluesky: BlueskyChannel | null,
+    private matrix: MatrixChannel | null,
   ) {}
 
   /**
@@ -70,6 +76,12 @@ export class Router {
   private findChannel(groupId: string): Channel | null {
     if (groupId.startsWith('tg:')) {
       return this.telegram;
+    }
+    if (groupId.startsWith('bsky:')) {
+      return this.bluesky;
+    }
+    if (groupId.startsWith('mx:')) {
+      return this.matrix;
     }
     return this.browserChat;
   }

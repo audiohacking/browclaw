@@ -23,7 +23,9 @@
     "vite-plugin-pwa": "^0.21.0"
   },
   "dependencies": {
+    "@atproto/api": "^0.19.0",
     "lucide-react": "^0.575.0",
+    "matrix-js-sdk": "^41.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",

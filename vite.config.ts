@@ -12,6 +12,10 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
+      workbox: {
+        // Increase limit to accommodate matrix-js-sdk WASM and large bundles
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8 MiB
+      },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'OpenBrowserClaw',
