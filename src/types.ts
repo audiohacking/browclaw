@@ -132,7 +132,11 @@ export interface Skill {
   description: string;
   content: string;
   enabled: boolean;
-  sourceUrl?: string;
+  sourceUrl?: string;    // Original URL entered by user
+  repoUrl?: string;      // GitHub repo root URL (for syncing)
+  repoBranch?: string;   // Branch (for syncing)
+  repoPath?: string;     // Path to skill dir or file within repo (for syncing)
+  isFile?: boolean;      // True when sourced from a single file (not a directory)
   createdAt: number;
   updatedAt: number;
 }
