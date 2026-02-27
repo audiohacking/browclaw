@@ -10,6 +10,10 @@ import { ulid } from '../../ulid.js';
 
 const SKILLS_INDEX_URL = 'https://github.com/anthropics/skills';
 const MAX_DESCRIPTION_PREVIEW = 200;
+/** Separator inserted between concatenated Markdown documents (rules, SKILL+rules). */
+const CONTENT_SEPARATOR = '\n\n---\n\n';
+/** Directory names that are not skill directories and should be skipped during repo discovery. */
+const EXCLUDED_ROOT_DIRS = new Set(['packages', 'node_modules', 'dist', '.github', 'spec', 'template']);
 
 // ---------------------------------------------------------------------------
 // GitHub URL parsing
@@ -96,6 +100,27 @@ async function ghFetchRaw(
   return res.text();
 }
 
+/**
+ * Compile all non-template rule files from a `rules/` directory into a single document.
+ * Used as a fallback when no pre-compiled AGENTS.md exists.
+ */
+async function fetchAndCompileRules(
+  owner: string,
+  repo: string,
+  rulesPath: string,
+  branch: string,
+): Promise<string> {
+  const entries = await ghListDir(owner, repo, rulesPath, branch);
+  const ruleFiles = entries
+    .filter((e) => e.type === 'file' && e.name.endsWith('.md') && !e.name.startsWith('_'))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  if (ruleFiles.length === 0) return '';
+  const contents = await Promise.all(
+    ruleFiles.map((f) => ghFetchRaw(owner, repo, f.path, branch)),
+  );
+  return contents.join(CONTENT_SEPARATOR);
+}
+
 // ---------------------------------------------------------------------------
 // SKILL.md parsing helpers
 // ---------------------------------------------------------------------------
@@ -148,8 +173,12 @@ interface SkillCandidate {
 }
 
 /**
- * Import a single skill from a directory.
- * Prefers AGENTS.md (compiled guide) over SKILL.md, combines both when available.
+ * Import a single skill from a directory, following the agentskills.io spec:
+ *  - SKILL.md  → metadata (name, description from YAML frontmatter) + overview
+ *  - AGENTS.md → compiled full guide for AI agents; used as the injected content
+ *  - rules/    → individual rule files compiled as a fallback when no AGENTS.md exists
+ *
+ * The content priority for injection is: AGENTS.md > compiled rules/ > SKILL.md
  */
 async function importSkillDir(
   owner: string,
@@ -160,6 +189,7 @@ async function importSkillDir(
 ): Promise<SkillCandidate> {
   const entries = await ghListDir(owner, repo, path, branch);
   const fileNames = entries.filter((e) => e.type === 'file').map((e) => e.name.toLowerCase());
+  const hasRulesDir = entries.some((e) => e.type === 'dir' && e.name === 'rules');
 
   const hasSkillMd = fileNames.includes('skill.md');
   const hasAgentsMd = fileNames.includes('agents.md');
@@ -168,25 +198,43 @@ async function importSkillDir(
     throw new Error(`No SKILL.md or AGENTS.md found in ${path}`);
   }
 
+  // SKILL.md = skill definition: YAML frontmatter provides name/description metadata
   let skillMdContent = '';
-  let agentsMdContent = '';
-
   if (hasSkillMd) {
     skillMdContent = await ghFetchRaw(owner, repo, `${path}/SKILL.md`, branch);
   }
+
+  // AGENTS.md = compiled full guide generated from all rule files; preferred for injection
+  let agentsMdContent = '';
   if (hasAgentsMd) {
     agentsMdContent = await ghFetchRaw(owner, repo, `${path}/AGENTS.md`, branch);
   }
 
-  // Combine SKILL.md (overview + YAML metadata for name/description parsing) with
-  // AGENTS.md (the full compiled guide intended for AI agents, preferred for richer content).
-  // When both exist, prepend SKILL.md so the agent sees the overview context first.
-  const content =
-    agentsMdContent && skillMdContent
-      ? `${skillMdContent}\n\n---\n\n${agentsMdContent}`
-      : agentsMdContent || skillMdContent;
+  // When no pre-compiled AGENTS.md exists but a rules/ directory does, compile the rules
+  let rulesContent = '';
+  if (!hasAgentsMd && hasRulesDir) {
+    try {
+      rulesContent = await fetchAndCompileRules(owner, repo, `${path}/rules`, branch);
+    } catch (err) {
+      console.debug(`Could not compile rules from ${path}/rules:`, err);
+    }
+  }
+
+  // Content priority for injection into the system prompt:
+  //   1. AGENTS.md (pre-compiled full guide — most complete)
+  //   2. SKILL.md + compiled rules/ (if no AGENTS.md but rules exist)
+  //   3. SKILL.md alone (simple single-file skill)
+  let content: string;
+  if (agentsMdContent) {
+    content = agentsMdContent;
+  } else if (rulesContent) {
+    content = skillMdContent ? `${skillMdContent}${CONTENT_SEPARATOR}${rulesContent}` : rulesContent;
+  } else {
+    content = skillMdContent;
+  }
 
   const fallbackName = path.split('/').filter(Boolean).pop() ?? 'Imported Skill';
+  // Always prefer SKILL.md for metadata; fall back to AGENTS.md if no SKILL.md
   const { name, description } = parseSkillMetadata(skillMdContent || agentsMdContent, fallbackName);
 
   return {
@@ -203,24 +251,39 @@ async function importSkillDir(
 
 /**
  * Discover all skill directories inside a repo.
- * Looks under `skills/` first (common convention), then falls back to the repo root.
+ *
+ * Per spec: first reads the repo-root AGENTS.md (when it exists) to understand
+ * the repo's structure and available skills.  Then enumerates skill directories
+ * under `skills/` (standard location), falling back to the repo root.
+ *
+ * Returns the root AGENTS.md content (as a repo guide) alongside the candidates.
  */
 async function discoverRepoSkills(
   owner: string,
   repo: string,
   branch: string,
   repoUrl: string,
-): Promise<SkillCandidate[]> {
+): Promise<{ repoGuide: string; candidates: SkillCandidate[] }> {
+  // Read root AGENTS.md first — it describes the repo structure and available skills
+  let repoGuide = '';
+  try {
+    repoGuide = await ghFetchRaw(owner, repo, 'AGENTS.md', branch);
+  } catch {
+    // No root AGENTS.md — proceed without it
+  }
+
   let dirs: GitHubEntry[] = [];
 
-  // Try /skills/ first
+  // Try /skills/ first (standard convention per agentskills.io spec)
   try {
     const entries = await ghListDir(owner, repo, 'skills', branch);
     dirs = entries.filter((e) => e.type === 'dir');
   } catch {
-    // Fall back to repo root, exclude hidden dirs
+    // Fall back to repo root, skip hidden and known non-skill directories
     const entries = await ghListDir(owner, repo, '', branch);
-    dirs = entries.filter((e) => e.type === 'dir' && !e.name.startsWith('.'));
+    dirs = entries.filter(
+      (e) => e.type === 'dir' && !e.name.startsWith('.') && !EXCLUDED_ROOT_DIRS.has(e.name),
+    );
   }
 
   if (dirs.length === 0) throw new Error('No skill directories found in this repository');
@@ -240,11 +303,12 @@ async function discoverRepoSkills(
     throw new Error('No skills found — no SKILL.md or AGENTS.md in any directory');
   }
 
-  return candidates;
+  return { repoGuide, candidates };
 }
 
 /**
  * Re-fetch a skill from its stored source (simulates git pull for a single skill).
+ * Follows the same content-priority logic as importSkillDir.
  */
 async function syncSkillContent(skill: Skill): Promise<string> {
   const { repoUrl, repoBranch = 'main', repoPath } = skill;
@@ -294,6 +358,7 @@ export function SkillsPage() {
   // Repo preview (multiple candidates)
   const [previewCandidates, setPreviewCandidates] = useState<SkillCandidate[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
+  const [repoGuide, setRepoGuide] = useState(''); // root AGENTS.md content when present
 
   const loadSkills = useCallback(async () => {
     setLoading(true);
@@ -316,6 +381,7 @@ export function SkillsPage() {
     setPendingCandidate(null);
     setPreviewCandidates([]);
     setSelectedCandidates(new Set());
+    setRepoGuide('');
     setShowForm(false);
   }
 
@@ -390,18 +456,23 @@ export function SkillsPage() {
 
       if (parsed.type === 'repo') {
         // Try main branch first, then master (both are common defaults)
+        let repoGuideResult = '';
         let candidates: SkillCandidate[] = [];
         let mainErr: unknown;
         try {
-          candidates = await discoverRepoSkills(
+          const result = await discoverRepoSkills(
             parsed.owner, parsed.repo, 'main', parsed.repoUrl,
           );
+          repoGuideResult = result.repoGuide;
+          candidates = result.candidates;
         } catch (err) {
           mainErr = err;
           try {
-            candidates = await discoverRepoSkills(
+            const result = await discoverRepoSkills(
               parsed.owner, parsed.repo, 'master', parsed.repoUrl,
             );
+            repoGuideResult = result.repoGuide;
+            candidates = result.candidates;
           } catch (masterErr) {
             throw new Error(
               `Could not discover skills on 'main' (${mainErr instanceof Error ? mainErr.message : mainErr}) ` +
@@ -409,6 +480,7 @@ export function SkillsPage() {
             );
           }
         }
+        setRepoGuide(repoGuideResult);
         setPreviewCandidates(candidates);
         setSelectedCandidates(new Set(candidates.map((c) => c.repoPath)));
         setImportMode('preview');
@@ -639,6 +711,21 @@ export function SkillsPage() {
                 <h3 className="card-title text-base">
                   Found {previewCandidates.length} skill{previewCandidates.length !== 1 ? 's' : ''}
                 </h3>
+
+                {/* Root AGENTS.md — repo guide read per spec to understand what's offered */}
+                {repoGuide && (
+                  <details className="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+                    <summary className="collapse-title text-sm font-medium py-2 min-h-0">
+                      Repo guide (AGENTS.md)
+                    </summary>
+                    <div className="collapse-content">
+                      <pre className="text-xs font-mono whitespace-pre-wrap opacity-70 max-h-48 overflow-y-auto">
+                        {repoGuide}
+                      </pre>
+                    </div>
+                  </details>
+                )}
+
                 <p className="text-sm opacity-60">
                   Select which skills to import. Each can be synced individually later.
                 </p>
