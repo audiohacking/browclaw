@@ -43,6 +43,12 @@ export const TELEGRAM_MAX_LENGTH = 4096;
 /** Telegram long-poll timeout in seconds */
 export const TELEGRAM_POLL_TIMEOUT = 30;
 
+/** Bluesky service URL */
+export const BLUESKY_SERVICE = 'https://bsky.social';
+
+/** Bluesky DM poll interval (ms) */
+export const BLUESKY_POLL_INTERVAL = 5_000;
+
 /** Task scheduler check interval (ms) */
 export const SCHEDULER_INTERVAL = 60_000;
 
@@ -77,4 +83,9 @@ export const CONFIG_KEYS = {
   PASSPHRASE_SALT: 'passphrase_salt',
   PASSPHRASE_VERIFY: 'passphrase_verify',
   ASSISTANT_NAME: 'assistant_name',
+  BLUESKY_IDENTIFIER: 'bluesky_identifier',
+  BLUESKY_PASSWORD: 'bluesky_password',
+  MATRIX_HOMESERVER: 'matrix_homeserver',
+  MATRIX_USER_ID: 'matrix_user_id',
+  MATRIX_PASSWORD: 'matrix_password',
 } as const;

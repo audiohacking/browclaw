@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import {
   Palette, KeyRound, Eye, EyeOff, Bot, MessageSquare,
-  Smartphone, HardDrive, Lock, Check,
+  Smartphone, HardDrive, Lock, Check, Cloud,
 } from 'lucide-react';
 import { getConfig, setConfig } from '../../db.js';
 import { CONFIG_KEYS } from '../../config.js';
@@ -54,6 +54,19 @@ export function SettingsPage() {
   const [telegramChatIds, setTelegramChatIds] = useState('');
   const [telegramSaved, setTelegramSaved] = useState(false);
 
+  // Bluesky
+  const [bskyIdentifier, setBskyIdentifier] = useState('');
+  const [bskyPassword, setBskyPassword] = useState('');
+  const [bskyPasswordMasked, setBskyPasswordMasked] = useState(true);
+  const [bskySaved, setBskySaved] = useState(false);
+
+  // Matrix
+  const [matrixHomeserver, setMatrixHomeserver] = useState('');
+  const [matrixUserId, setMatrixUserId] = useState('');
+  const [matrixPassword, setMatrixPassword] = useState('');
+  const [matrixPasswordMasked, setMatrixPasswordMasked] = useState(true);
+  const [matrixSaved, setMatrixSaved] = useState(false);
+
   // Storage
   const [storageUsage, setStorageUsage] = useState(0);
   const [storageQuota, setStorageQuota] = useState(0);
@@ -87,6 +100,20 @@ export function SettingsPage() {
           setTelegramChatIds(chatIds);
         }
       }
+
+      // Bluesky
+      const bskyId = await getConfig(CONFIG_KEYS.BLUESKY_IDENTIFIER);
+      if (bskyId) setBskyIdentifier(bskyId);
+      const bskyPwd = await getConfig(CONFIG_KEYS.BLUESKY_PASSWORD);
+      if (bskyPwd) setBskyPassword(bskyPwd);
+
+      // Matrix
+      const mxHomeserver = await getConfig(CONFIG_KEYS.MATRIX_HOMESERVER);
+      if (mxHomeserver) setMatrixHomeserver(mxHomeserver);
+      const mxUserId = await getConfig(CONFIG_KEYS.MATRIX_USER_ID);
+      if (mxUserId) setMatrixUserId(mxUserId);
+      const mxPassword = await getConfig(CONFIG_KEYS.MATRIX_PASSWORD);
+      if (mxPassword) setMatrixPassword(mxPassword);
 
       // Storage
       const est = await getStorageEstimate();
@@ -122,6 +149,22 @@ export function SettingsPage() {
     await orch.configureTelegram(telegramToken.trim(), ids);
     setTelegramSaved(true);
     setTimeout(() => setTelegramSaved(false), 2000);
+  }
+
+  async function handleBskySave() {
+    await orch.configureBluesky(bskyIdentifier.trim(), bskyPassword);
+    setBskySaved(true);
+    setTimeout(() => setBskySaved(false), 2000);
+  }
+
+  async function handleMatrixSave() {
+    await orch.configureMatrix(
+      matrixHomeserver.trim(),
+      matrixUserId.trim(),
+      matrixPassword,
+    );
+    setMatrixSaved(true);
+    setTimeout(() => setMatrixSaved(false), 2000);
   }
 
   async function handleRequestPersistent() {
@@ -301,6 +344,9 @@ export function SettingsPage() {
       <div className="card card-bordered bg-base-200">
         <div className="card-body p-4 sm:p-6 gap-3">
           <h3 className="card-title text-base gap-2"><Smartphone className="w-4 h-4" /> Telegram Bot</h3>
+          <p className="text-xs opacity-60">
+            Create a bot via <strong>@BotFather</strong> on Telegram to get a token, then send <code>/chatid</code> to your bot to retrieve allowed chat IDs.
+          </p>
           <fieldset className="fieldset">
             <legend className="fieldset-legend">Bot Token</legend>
             <input
@@ -331,6 +377,116 @@ export function SettingsPage() {
               Save Telegram Config
             </button>
             {telegramSaved && (
+              <span className="text-success text-sm flex items-center gap-1"><Check className="w-4 h-4" /> Saved</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- Bluesky ---- */}
+      <div className="card card-bordered bg-base-200">
+        <div className="card-body p-4 sm:p-6 gap-3">
+          <h3 className="card-title text-base gap-2"><Cloud className="w-4 h-4" /> Bluesky DMs</h3>
+          <p className="text-xs opacity-60">
+            Receives and replies to Bluesky DMs. Use an <strong>App Password</strong> (not your main password): go to <strong>bsky.social → Settings → Privacy and Security → App Passwords</strong>.
+          </p>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Handle</legend>
+            <input
+              type="text"
+              className="input input-bordered input-sm w-full font-mono"
+              placeholder="you.bsky.social"
+              value={bskyIdentifier}
+              onChange={(e) => setBskyIdentifier(e.target.value)}
+            />
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">App Password</legend>
+            <div className="flex gap-2">
+              <input
+                type={bskyPasswordMasked ? 'password' : 'text'}
+                className="input input-bordered input-sm w-full flex-1 font-mono"
+                placeholder="xxxx-xxxx-xxxx-xxxx"
+                value={bskyPassword}
+                onChange={(e) => setBskyPassword(e.target.value)}
+              />
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setBskyPasswordMasked(!bskyPasswordMasked)}
+              >
+                {bskyPasswordMasked ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            </div>
+          </fieldset>
+          <div className="flex items-center gap-2">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={handleBskySave}
+              disabled={!bskyIdentifier.trim() || !bskyPassword.trim()}
+            >
+              Save Bluesky Config
+            </button>
+            {bskySaved && (
+              <span className="text-success text-sm flex items-center gap-1"><Check className="w-4 h-4" /> Saved</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- Matrix ---- */}
+      <div className="card card-bordered bg-base-200">
+        <div className="card-body p-4 sm:p-6 gap-3">
+          <h3 className="card-title text-base gap-2"><MessageSquare className="w-4 h-4" /> Matrix</h3>
+          <p className="text-xs opacity-60">
+            Listens to all joined Matrix rooms for messages. Enter your homeserver URL (e.g. <code>https://matrix.org</code>), your full Matrix user ID (e.g. <code>@you:matrix.org</code>), and your account password.
+          </p>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Homeserver URL</legend>
+            <input
+              type="text"
+              className="input input-bordered input-sm w-full font-mono"
+              placeholder="https://matrix.org"
+              value={matrixHomeserver}
+              onChange={(e) => setMatrixHomeserver(e.target.value)}
+            />
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">User ID</legend>
+            <input
+              type="text"
+              className="input input-bordered input-sm w-full font-mono"
+              placeholder="@you:matrix.org"
+              value={matrixUserId}
+              onChange={(e) => setMatrixUserId(e.target.value)}
+            />
+          </fieldset>
+          <fieldset className="fieldset">
+            <legend className="fieldset-legend">Password</legend>
+            <div className="flex gap-2">
+              <input
+                type={matrixPasswordMasked ? 'password' : 'text'}
+                className="input input-bordered input-sm w-full flex-1 font-mono"
+                placeholder="••••••••"
+                value={matrixPassword}
+                onChange={(e) => setMatrixPassword(e.target.value)}
+              />
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setMatrixPasswordMasked(!matrixPasswordMasked)}
+              >
+                {matrixPasswordMasked ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </button>
+            </div>
+          </fieldset>
+          <div className="flex items-center gap-2">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={handleMatrixSave}
+              disabled={!matrixHomeserver.trim() || !matrixUserId.trim() || !matrixPassword.trim()}
+            >
+              Save Matrix Config
+            </button>
+            {matrixSaved && (
               <span className="text-success text-sm flex items-center gap-1"><Check className="w-4 h-4" /> Saved</span>
             )}
           </div>

@@ -47,6 +47,8 @@ import { readGroupFile } from './storage.js';
 import { encryptValue, decryptValue } from './crypto.js';
 import { BrowserChatChannel } from './channels/browser-chat.js';
 import { TelegramChannel } from './channels/telegram.js';
+import { BlueskyChannel } from './channels/bluesky.js';
+import { MatrixChannel } from './channels/matrix.js';
 import { Router } from './router.js';
 import { TaskScheduler } from './task-scheduler.js';
 import { ulid } from './ulid.js';
@@ -97,6 +99,8 @@ export class Orchestrator {
   readonly events = new EventBus();
   readonly browserChat = new BrowserChatChannel();
   readonly telegram = new TelegramChannel();
+  readonly bluesky = new BlueskyChannel();
+  readonly matrix = new MatrixChannel();
 
   private router!: Router;
   private scheduler!: TaskScheduler;
@@ -146,7 +150,7 @@ export class Orchestrator {
     );
 
     // Set up router
-    this.router = new Router(this.browserChat, this.telegram);
+    this.router = new Router(this.browserChat, this.telegram, this.bluesky, this.matrix);
 
     // Set up channels
     this.browserChat.onMessage((msg) => this.enqueue(msg));
@@ -159,6 +163,25 @@ export class Orchestrator {
       this.telegram.configure(telegramToken, chatIds);
       this.telegram.onMessage((msg) => this.enqueue(msg));
       this.telegram.start();
+    }
+
+    // Configure Bluesky if credentials exist
+    const bskyIdentifier = await getConfig(CONFIG_KEYS.BLUESKY_IDENTIFIER);
+    const bskyPassword = await getConfig(CONFIG_KEYS.BLUESKY_PASSWORD);
+    if (bskyIdentifier && bskyPassword) {
+      this.bluesky.configure(bskyIdentifier, bskyPassword);
+      this.bluesky.onMessage((msg) => this.enqueue(msg));
+      this.bluesky.start();
+    }
+
+    // Configure Matrix if credentials exist
+    const matrixHomeserver = await getConfig(CONFIG_KEYS.MATRIX_HOMESERVER);
+    const matrixUserId = await getConfig(CONFIG_KEYS.MATRIX_USER_ID);
+    const matrixPassword = await getConfig(CONFIG_KEYS.MATRIX_PASSWORD);
+    if (matrixHomeserver && matrixUserId && matrixPassword) {
+      this.matrix.configure(matrixHomeserver, matrixUserId, matrixPassword);
+      this.matrix.onMessage((msg) => this.enqueue(msg));
+      this.matrix.start();
     }
 
     // Set up agent worker
@@ -274,6 +297,35 @@ export class Orchestrator {
   }
 
   /**
+   * Configure Bluesky DM channel.
+   */
+  async configureBluesky(identifier: string, password: string): Promise<void> {
+    await setConfig(CONFIG_KEYS.BLUESKY_IDENTIFIER, identifier);
+    await setConfig(CONFIG_KEYS.BLUESKY_PASSWORD, password);
+    this.bluesky.stop();
+    this.bluesky.configure(identifier, password);
+    this.bluesky.onMessage((msg) => this.enqueue(msg));
+    await this.bluesky.start();
+  }
+
+  /**
+   * Configure Matrix channel.
+   */
+  async configureMatrix(
+    homeserverUrl: string,
+    userId: string,
+    password: string,
+  ): Promise<void> {
+    await setConfig(CONFIG_KEYS.MATRIX_HOMESERVER, homeserverUrl);
+    await setConfig(CONFIG_KEYS.MATRIX_USER_ID, userId);
+    await setConfig(CONFIG_KEYS.MATRIX_PASSWORD, password);
+    this.matrix.stop();
+    this.matrix.configure(homeserverUrl, userId, password);
+    this.matrix.onMessage((msg) => this.enqueue(msg));
+    await this.matrix.start();
+  }
+
+  /**
    * Submit a message from the browser chat UI.
    */
   submitMessage(text: string, groupId?: string): void {
@@ -350,6 +402,8 @@ export class Orchestrator {
   shutdown(): void {
     this.scheduler.stop();
     this.telegram.stop();
+    this.bluesky.stop();
+    this.matrix.stop();
     this.agentWorker.terminate();
   }
 
@@ -433,7 +487,10 @@ export class Orchestrator {
         sender: 'Scheduler',
         content: triggerContent,
         timestamp: Date.now(),
-        channel: groupId.startsWith('tg:') ? 'telegram' : 'browser',
+        channel: groupId.startsWith('tg:') ? 'telegram'
+          : groupId.startsWith('bsky:') ? 'bluesky'
+          : groupId.startsWith('mx:') ? 'matrix'
+          : 'browser',
         isFromMe: false,
         isTrigger: true,
       };
@@ -537,7 +594,10 @@ export class Orchestrator {
       sender: this.assistantName,
       content: `📝 **Context Compacted**\n\n${summary}`,
       timestamp: Date.now(),
-      channel: groupId.startsWith('tg:') ? 'telegram' : 'browser',
+      channel: groupId.startsWith('tg:') ? 'telegram'
+        : groupId.startsWith('bsky:') ? 'bluesky'
+        : groupId.startsWith('mx:') ? 'matrix'
+        : 'browser',
       isFromMe: true,
       isTrigger: false,
     };
@@ -556,7 +616,10 @@ export class Orchestrator {
       sender: this.assistantName,
       content: text,
       timestamp: Date.now(),
-      channel: groupId.startsWith('tg:') ? 'telegram' : 'browser',
+      channel: groupId.startsWith('tg:') ? 'telegram'
+        : groupId.startsWith('bsky:') ? 'bluesky'
+        : groupId.startsWith('mx:') ? 'matrix'
+        : 'browser',
       isFromMe: true,
       isTrigger: false,
     };

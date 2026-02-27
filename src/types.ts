@@ -54,7 +54,7 @@ export interface ConfigEntry {
   value: string; // JSON-encoded or raw string
 }
 
-export type ChannelType = 'browser' | 'telegram';
+export type ChannelType = 'browser' | 'telegram' | 'bluesky' | 'matrix';
 
 /** Channel interface — matches NanoClaw's Channel abstraction */
 export interface Channel {
