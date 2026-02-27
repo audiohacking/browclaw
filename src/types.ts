@@ -125,6 +125,18 @@ export interface ThinkingLogEntry {
   detail?: string;
 }
 
+/** Agent skill loaded from a SKILL.md file */
+export interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  enabled: boolean;
+  sourceUrl?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** Tool definition for Claude API */
 export interface ToolDefinition {
   name: string;
