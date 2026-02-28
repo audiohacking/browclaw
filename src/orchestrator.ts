@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Orchestrator
+// browclaw — Orchestrator
 // ---------------------------------------------------------------------------
 //
 // The orchestrator is the main thread coordinator. It manages:

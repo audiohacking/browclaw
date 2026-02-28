@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — ULID generator (no dependencies)
+// browclaw — ULID generator (no dependencies)
 // ---------------------------------------------------------------------------
 
 const ENCODING = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';

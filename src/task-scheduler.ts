@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Task Scheduler
+// browclaw — Task Scheduler
 // ---------------------------------------------------------------------------
 //
 // Evaluates cron expressions and fires tasks on schedule.

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Chat input
+// browclaw — Chat input
 // ---------------------------------------------------------------------------
 
 import { useState, useRef, type KeyboardEvent } from 'react';

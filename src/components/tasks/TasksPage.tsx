@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Tasks page
+// browclaw — Tasks page
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useState } from 'react';

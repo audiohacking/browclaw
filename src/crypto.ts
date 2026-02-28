@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Web Crypto helpers for API key encryption
+// browclaw — Web Crypto helpers for API key encryption
 // ---------------------------------------------------------------------------
 //
 // Uses a non-extractable AES-256-GCM CryptoKey stored in a dedicated

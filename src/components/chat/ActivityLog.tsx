@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Activity log (collapsible)
+// browclaw — Activity log (collapsible)
 // ---------------------------------------------------------------------------
 
 import { useState } from 'react';

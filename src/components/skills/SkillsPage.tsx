@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Skills page
+// browclaw — Skills page
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useState } from 'react';

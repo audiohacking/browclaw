@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Theme Store (Zustand)
+// browclaw — Theme Store (Zustand)
 // ---------------------------------------------------------------------------
 
 import { create } from 'zustand';

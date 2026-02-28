@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Browser Chat Channel
+// browclaw — Browser Chat Channel
 // ---------------------------------------------------------------------------
 
 import type { Channel, InboundMessage } from '../types.js';

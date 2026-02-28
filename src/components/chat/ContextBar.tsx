@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Context / token usage bar
+// browclaw — Context / token usage bar
 // ---------------------------------------------------------------------------
 
 import type { TokenUsage } from '../../types.js';
