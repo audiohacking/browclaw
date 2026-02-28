@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Global file viewer store
+// browclaw — Global file viewer store
 // ---------------------------------------------------------------------------
 
 import { create } from 'zustand';

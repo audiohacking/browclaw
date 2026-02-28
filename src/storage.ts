@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — OPFS (Origin Private File System) helpers
+// browclaw — OPFS (Origin Private File System) helpers
 // ---------------------------------------------------------------------------
 
 import { OPFS_ROOT } from './config.js';

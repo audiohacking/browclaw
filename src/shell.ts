@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Lightweight Shell Emulator
+// browclaw — Lightweight Shell Emulator
 // ---------------------------------------------------------------------------
 //
 // A minimal bash-like shell that runs entirely in JS using OPFS for the

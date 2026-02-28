@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Message bubble
+// browclaw — Message bubble
 // ---------------------------------------------------------------------------
 
 import ReactMarkdown from 'react-markdown';

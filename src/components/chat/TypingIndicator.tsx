@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Typing indicator
+// browclaw — Typing indicator
 // ---------------------------------------------------------------------------
 
 export function TypingIndicator() {

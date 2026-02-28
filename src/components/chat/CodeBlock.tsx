@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Code block with copy button
+// browclaw — Code block with copy button
 // ---------------------------------------------------------------------------
 
 import { useState } from 'react';

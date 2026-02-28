@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Settings page
+// browclaw — Settings page
 // ---------------------------------------------------------------------------
 
 import { useEffect, useState } from 'react';

@@ -14,8 +14,8 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'OpenBrowserClaw',
-        short_name: 'OpenBrowserClaw',
+        name: 'browclaw',
+        short_name: 'browclaw',
         description: 'Browser-native personal AI assistant',
         theme_color: '#1a1a2e',
         background_color: '#1a1a2e',

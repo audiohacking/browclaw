@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Theme toggle component
+// browclaw — Theme toggle component
 // ---------------------------------------------------------------------------
 
 import { useThemeStore, type ThemeChoice } from '../../stores/theme-store.js';

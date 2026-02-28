@@ -1,20 +1,27 @@
-# OpenBrowserClaw
+# browclaw
 
-> **Disclaimer:** OpenBrowserClaw is a personal, open-source project. It is **not** affiliated with any cryptocurrency, meme coin, token, or social media account. If you see coins, tokens, or social media profiles claiming association with this project, they are **not legitimate** and are not endorsed by the author(s). Stay safe and do your own research.
+**Local-first, no-cost AI in the browser.** Run [Ollama](https://ollama.com) on your machine, point browclaw at it, and chat with no API keys and no cloud. Optional: use Anthropic for cloud models.
 
-Browser-native personal AI assistant. Zero infrastructure — the browser is the server.
+Browser-native personal AI assistant. Zero infrastructure — the browser is the server. Same idea as NanoClaw/OpenBrowserClaw: small, single-user, understandable; runs entirely in a browser tab.
 
-Built as a browser-only reimagination of NanoClaw. Same philosophy, small enough to understand, built for one user, but running entirely in a browser tab.
+## Quick Start (Ollama — local, free)
 
-## Quick Start
+1. Install and run [Ollama](https://ollama.com), and pull a model, e.g. `ollama pull llama3.2`.
+2. Clone and run browclaw:
 
 ```bash
-cd openbrowserclaw
+cd browclaw
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`, paste your [Anthropic API key](https://console.anthropic.com/), and start chatting.
+3. Open `http://localhost:5173`, go to **Settings**, choose **Ollama (Local)** and set **Ollama URL** (default `http://localhost:11434`). Pick your model name (e.g. `llama3.2`) and start chatting.
+
+No API key required. Data stays on your machine.
+
+## Optional: Anthropic (cloud)
+
+In Settings you can switch to **Anthropic** and paste an [API key](https://console.anthropic.com/) to use Claude instead of or in addition to Ollama.
 
 ## Architecture
 
@@ -35,13 +42,13 @@ Open `http://localhost:5173`, paste your [Anthropic API key](https://console.ant
 │          ┌───────────┼───────────┐                       │
 │          ▼           ▼           ▼                       │
 │     IndexedDB      OPFS    Agent Worker                  │
-│     (messages,   (group    (Claude API                   │
+│     (messages,   (group    (Ollama / Anthropic API       │
 │      tasks,       files,    tool-use loop,               │
 │      config)     memory)    WebVM sandbox)               │
 │                                                          │
 │  Channels:                                               │
 │  ├── Browser Chat (built-in)                             │
-│  └── Telegram Bot API (optional, pure HTTPS)             │
+│  └── Telegram Bot API (optional, pure HTTPS)              │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -51,7 +58,7 @@ Open `http://localhost:5173`, paste your [Anthropic API key](https://console.ant
 |------|---------|
 | `src/index.ts` | Entry point, bootstraps UI |
 | `src/orchestrator.ts` | State machine, message routing, agent invocation |
-| `src/agent-worker.ts` | Web Worker: Claude API tool-use loop |
+| `src/agent-worker.ts` | Web Worker: Ollama / Anthropic tool-use loop |
 | `src/tools.ts` | Tool definitions (bash, read/write files, fetch, etc.) |
 | `src/vm.ts` | WebVM wrapper (v86 Alpine Linux in WASM) |
 | `src/db.ts` | IndexedDB: messages, sessions, tasks, config |
@@ -67,9 +74,9 @@ Open `http://localhost:5173`, paste your [Anthropic API key](https://console.ant
 
 1. **You type a message** in the browser chat (or send one via Telegram)
 2. **The orchestrator** checks the trigger pattern, saves to IndexedDB, queues for processing
-3. **The agent worker** (a Web Worker) sends your message + conversation history to the Anthropic API
-4. **Claude responds**, possibly using tools (bash, file I/O, fetch, JavaScript)
-5. **Tool results** are fed back to Claude in a loop until it produces a final text response
+3. **The agent worker** sends your message + history to Ollama or Anthropic
+4. **The model responds**, possibly using tools (bash, file I/O, fetch, JavaScript)
+5. **Tool results** are fed back in a loop until a final text response
 6. **The response** is routed back to the originating channel (browser chat or Telegram)
 
 ## Tools
@@ -88,7 +95,7 @@ Open `http://localhost:5173`, paste your [Anthropic API key](https://console.ant
 Optional. Works entirely via HTTPS — no WebSockets or special protocols.
 
 1. Create a bot with `@BotFather` on Telegram
-2. Open Settings in OpenBrowserClaw, paste the bot token
+2. Open Settings in browclaw, paste the bot token
 3. Send `/chatid` to your bot to get the chat ID
 4. Add the chat ID in Settings
 5. Messages from Telegram are processed the same as browser chat
@@ -108,9 +115,9 @@ The `bash` tool runs commands in a v86-emulated Alpine Linux. To enable:
 
 Without these assets, the `bash` tool returns a helpful error. All other tools work without the VM.
 
-## Comparison with NanoClaw
+## Comparison with NanoClaw / OpenBrowserClaw
 
-| | NanoClaw | OpenBrowserClaw |
+| | NanoClaw | browclaw (this fork) |
 |---|---|---|
 | Runtime | Node.js process | Browser tab |
 | Agent sandbox | Docker/Apple Container | Web Worker + WebVM |
@@ -118,7 +125,7 @@ Without these assets, the `bash` tool returns a helpful error. All other tools w
 | Files | Filesystem | OPFS |
 | Primary channel | WhatsApp | In-browser chat |
 | Other channels | Telegram, Discord | Telegram |
-| Agent SDK | Claude Agent SDK | Raw Anthropic API |
+| Agent SDK | Claude Agent SDK | Ollama API / Raw Anthropic API |
 | Background tasks | launchd service | setInterval (tab must be open) |
 | Deployment | Self-hosted server | Static files (any CDN) |
 | Dependencies | ~50 npm packages | 0 runtime deps |
@@ -144,17 +151,21 @@ No server needed. It's just HTML, CSS, and JS.
 
 ## Security
 
-OpenBrowserClaw is a proof of concept. All data stays in your browser, nothing is sent to any server except the Anthropic API. Here's an honest look at the current security posture:
+browclaw is a proof of concept. With Ollama, data stays on your machine; with Anthropic, only the API sees your requests. Current security posture:
 
 **What it does:**
-- API keys are encrypted at rest with AES-256-GCM using a non-extractable `CryptoKey` stored in IndexedDB. JavaScript cannot export the raw key material.
+- API keys (Anthropic) are encrypted at rest with AES-256-GCM using a non-extractable `CryptoKey` stored in IndexedDB. JavaScript cannot export the raw key material.
 - All storage (IndexedDB, OPFS) is same-origin scoped by the browser.
 - The agent runs in a Web Worker, separate from the UI thread.
 
 **What it doesn't do (yet):**
-- The encryption protects against casual inspection (DevTools, disk forensics) but not a full XSS attack on the same origin, an attacker with script execution could call the encrypt/decrypt API.
-- The `javascript` tool runs `eval()` in the Worker, which has access to `fetch()`. This means Claude can make arbitrary HTTP requests through the JS tool regardless of any `fetch_url` restrictions.
+- The encryption protects against casual inspection (DevTools, disk forensics) but not a full XSS attack on the same origin; an attacker with script execution could call the encrypt/decrypt API.
+- The `javascript` tool runs `eval()` in the Worker, which has access to `fetch()`. Claude can make arbitrary HTTP requests through the JS tool regardless of any `fetch_url` restrictions.
 - Outgoing HTTP requests (via `fetch_url` or the JS tool) have no user confirmation step.
 - The Telegram bot token is currently stored in plaintext.
 
 This is a single-user local tool, not a multi-tenant platform. Contributions to improve the security model are welcome.
+
+---
+
+**Fork:** browclaw is a fork of [OpenBrowserClaw](https://github.com/nanoclaw/openbrowserclaw). It emphasizes local-first, no-cost usage with Ollama while keeping optional Anthropic support.

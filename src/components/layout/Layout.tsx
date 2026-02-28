@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// OpenBrowserClaw — Layout shell
+// browclaw — Layout shell
 // ---------------------------------------------------------------------------
 
 import { Outlet, NavLink } from 'react-router';
@@ -27,7 +27,7 @@ export function Layout() {
         <div className="navbar-start">
           <span className="text-xl font-bold select-none flex items-center gap-1.5">
             <span className="text-lg">🦀</span>
-            <span className="hidden sm:inline">OpenBrowserClaw</span>
+            <span className="hidden sm:inline">browclaw</span>
           </span>
         </div>
 
